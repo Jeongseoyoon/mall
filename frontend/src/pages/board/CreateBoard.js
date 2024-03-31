@@ -1,18 +1,43 @@
-import axios from 'axios';
-import React, { useState } from 'react';
-import BasicLayout from '../../layout/BasicLayout';
-import { Bounce, ToastContainer, toast } from 'react-toastify';
+import {axios, useState, Button, Modal, useNavigate, Link, useLocation, BasicLayout, React } from '../../common/module';
 import 'react-toastify/dist/ReactToastify.css';
-import { Navigate, useNavigate } from 'react-router-dom';
+
+Modal.setAppElement('#root');
 
 function CreateBoard(props) {
 
+  const customStyles = {
+    content: {
+      top: '50%',
+      left: '50%',
+      right: 'auto',
+      bottom: 'auto',
+      marginRight: '-50%',
+      transform: 'translate(-50%, -50%)',
+    },
+  };
+
+
+
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [userId, setUserId] = useState("");
+  const [modalIsOpen, setIsOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const navigate = useNavigate();
 
+  function openModal(message) {
+    setIsOpen(true);
+    setModalMessage(message);
+  }
+
+  function closeModal() {
+    setIsOpen(false);
+    if(saveSuccess) {
+      navigate("/board", { });
+    }
+  }
   const onClickSave = () => {
 
     const params = {
@@ -21,26 +46,14 @@ function CreateBoard(props) {
       userId: userId,
     }
     axios.post('/api/board', params)
-    .then((response)=>{
-      console.log('response',response)
-      toast.success('🦄게시글이 등록되었습니다.', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        transition: Bounce,
-        });
-    })
-    .catch((eeror)=>{
-      toast.error('게시글 등록에 실패하였습니다.')
-    })
-    setTimeout(function () {
-       navigate("/board", { });
-      }, 3000);
+    .then((res)=>{
+      setSaveSuccess(true);
+      openModal('게시글이 성공적으로 등록되었습니다.');
+    }).catch((error) => {
+      const message = '게시글 작성에 실패하였습니다.';
+      setSaveSuccess(false);
+      openModal(message);
+    });
   };
 
 
@@ -63,18 +76,15 @@ function CreateBoard(props) {
           <div className='flex_center mgt1'>
             <button className='btn btn-blue' value="게시글 생성" onClick={onClickSave}>등록</button>
           </div>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
+          <Modal
+            isOpen={modalIsOpen}
+            onRequestClose={closeModal}
+            contentLabel="Modal"
+            style={customStyles}
+          >
+            <button onClick={closeModal}>close</button>
+              <div>{modalMessage}</div>
+          </Modal>
         </div>
       </div>
     </BasicLayout>

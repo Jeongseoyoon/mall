@@ -1,6 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import BasicLayout from '../layout/BasicLayout';
 import MainLayout from '../layout/MainLayout';
 
 function MainPage(props) {

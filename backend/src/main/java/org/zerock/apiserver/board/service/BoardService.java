@@ -2,6 +2,7 @@ package org.zerock.apiserver.board.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.zerock.apiserver.board.dto.BoardDTO;
 import org.zerock.apiserver.board.dto.CommentDTO;
 import org.zerock.apiserver.domain.Board;
@@ -29,8 +30,10 @@ public class BoardService {
      * @param params 
      * @return
      */
+    @Transactional
     public int createBoard(BoardDTO params) {
 
+        // 파라미터로 받은 데이터를 Entity 객체로 변경하여 Save한다.
         Board board = new Board();
         board.setTitle(params.getTitle());
         board.setContent(params.getContent());
@@ -39,6 +42,7 @@ public class BoardService {
         board.setRegDt(LocalDate.now());
 
         boardRepository.save(board);
+        // JPA에서는 기본적으로 Exception이 발생하지 않으면 성공이라고 판단할 수 있다. 그래서 항상 1로 리턴시킨다.
 
         return 1;
     }
@@ -48,9 +52,16 @@ public class BoardService {
      * @param params
      * @return
      */
+    @Transactional
     public int updateBoard(BoardDTO params) {
 
-        Board board = boardRepository.findById(params.getBoardId()).get();
+        Long boardId = params.getBoardId();
+        if(boardId == null) {
+            throw new IllegalArgumentException("게시글 아이디를 찾을 수 없습니다.");
+        }
+
+        // boardId로 데이터를 조회해서 있으면 해당 데이터를 가지고오고 없으면 에러를 발생시킨다.
+        Board board = boardRepository.findById(params.getBoardId()).orElseThrow();
         board.setTitle(params.getTitle());
         board.setContent(params.getContent());
 
@@ -65,7 +76,7 @@ public class BoardService {
      * @return
      */
     public int deleteBoard(Long boardId) {
-
+        
         Board board = boardRepository.findById(boardId).get();
 
         boardRepository.delete(board);
